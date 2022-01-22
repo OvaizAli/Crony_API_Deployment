@@ -5,3 +5,5 @@ uvicorn
 gunicorn
 uvloop
 httptools
+scipy
+scikit-learn

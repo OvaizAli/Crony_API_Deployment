@@ -10,15 +10,12 @@ from fastapi import FastAPI
 # import re
 # from nltk.corpus import stopwords
 # nltk.download('stopwords')
-# from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 # from sklearn import model_selection, preprocessing
 # from sklearn.metrics import accuracy_score
 
-# from sklearn.linear_model import LogisticRegression
-# from sklearn.ensemble import RandomForestClassifier
-# from xgboost import XGBClassifier
+from xgboost import XGBClassifier
 import pickle
-# from sklearn import metrics
 
 
 loadModel = pickle.load(open("XGBoostClassifier.pickle.dat", "rb"))
