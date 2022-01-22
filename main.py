@@ -27,7 +27,7 @@ app = FastAPI()
 
 @app.get("/")
 def info():
-    return "Hello Buddy! Use /{userInput} to get the results from the API. e.g http://127.0.0.1:8000/Who is at the store today?"
+    return "Hello Buddy! Use /{userInput} to get the results from the API. e.g https://cronyfastapi.herokuapp.com/Who is at the store today?"
 
 @app.get("/{userInput}")
 def cmdQuery(userInput : str):
