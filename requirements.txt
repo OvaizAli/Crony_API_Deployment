@@ -1,0 +1,3 @@
+fastapi
+pickle-mixin
+xgboost
