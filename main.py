@@ -40,15 +40,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def connDatabase(colName):
+# def connDatabase(colName):
+def connDatabase():
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/test"
 
     client = MongoClient(CONNECTION_STRING)
 
-    db = client.CronyAI
-    col = db[colName]
+    # db = client.CronyAI
+    # col = db[colName]
     
-    return col
+    # return col
+    return client
 
 @app.get("/")
 def info():
@@ -72,6 +74,6 @@ def cmdQuery(userInput : str):
 
 @app.get("/notFound")
 def retNotFound():
-    colObj = connDatabase("not_found")
-
-    return colObj.find()
+    # colObj = connDatabase("not_found")
+    return connDatabase()
+    # return colObj.find()
