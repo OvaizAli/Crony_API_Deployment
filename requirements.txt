@@ -8,3 +8,4 @@ httptools
 scipy
 scikit-learn
 pymongo
+dnspython
