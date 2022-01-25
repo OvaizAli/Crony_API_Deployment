@@ -7,3 +7,4 @@ uvloop
 httptools
 scipy
 scikit-learn
+pymongo

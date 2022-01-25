@@ -1,6 +1,10 @@
+# Importing Libraries
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pymongo import MongoClient
+import pymongo 
 # from nltk.stem import WordNetLemmatizer
 # nltk.download('wordnet')
 # from nltk.stem import LancasterStemmer
@@ -14,10 +18,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sklearn.feature_extraction.text import TfidfVectorizer
 # from sklearn import model_selection, preprocessing
 # from sklearn.metrics import accuracy_score
-
 from xgboost import XGBClassifier
 import pickle
 
+# Loading all the models/vectorizer/encodings
 
 loadModel = pickle.load(open("XGBoostClassifier.pickle.dat", "rb"))
 vectorizer = pickle.load(open("tfidfVectorizer.pickle.dat", "rb"))
@@ -35,6 +39,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def connDatabase(colName):
+    CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/test"
+
+    client = MongoClient(CONNECTION_STRING)
+
+    db = client.CronyAI
+    col = db[colName]
+    
+    return col
 
 @app.get("/")
 def info():
@@ -55,4 +69,9 @@ def cmdQuery(userInput : str):
     else:
         
         return {"Sorry I didn't get you!"}
+
+@app.get("/notFound")
+def retNotFound():
+    colObj = connDatabase("not_found")
     
+    return colObj.find()
