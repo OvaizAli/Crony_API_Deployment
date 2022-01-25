@@ -54,7 +54,7 @@ def connDatabase(colName):
 def info():
     return "Hello Buddy! Use /{userInput} to get the results from the API. e.g https://cronyfastapi.herokuapp.com/Who is at the store today?"
 
-@app.get("/{userInput}")
+@app.get("/query/{userInput}")
 def cmdQuery(userInput : str):
     userInput = userInput.lower()
     vect = vectorizer.transform([userInput])
@@ -73,5 +73,5 @@ def cmdQuery(userInput : str):
 @app.get("/notFound")
 def retNotFound():
     colObj = connDatabase("not_found")
-    
+
     return colObj.find()
