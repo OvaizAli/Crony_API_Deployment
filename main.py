@@ -24,13 +24,6 @@ from bson import json_util
 import json
 import datetime
 
-# Loading all the models/vectorizer/encodings
-
-loadModel = pickle.load(open("XGBoostClassifier.pickle.dat", "rb"))
-vectorizer = pickle.load(open("tfidfVectorizer.pickle.dat", "rb"))
-encoding = pickle.load(open("Encodings.pickle.dat", "rb"))
-
-
 app = FastAPI()
 
 origins = ["*"]
@@ -42,6 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+######################################################## UTILITY FUNCTIONS ##############################################
 
 async def getDataFromDB(colName):
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
@@ -60,44 +55,62 @@ async def getDataFromDB(colName):
         return "Unable to connect to the server."
 
 
-async def addDataFromDB(colName, dataObj):  
+async def addDataToDB(colName, dataObj):  
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
     client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
     database = client.CronyAI
-    collection = database.get_collection("action")
+    collection = database.get_collection(colName)
    
     try:
         result = await collection.insert_one(dataObj)
-
-        return "Success"
+        return "Successfully Added Your Data"
 
     except Exception:
         return "Unable to connect to the server."
 
 
+############################################################## API FUNCTIONS ###############################################################
+
 @app.get("/")
 def info():
-    return "Hello Buddy! Use /{userInput} to get the results from the API. e.g https://cronyfastapi.herokuapp.com/Who is at the store today?"
+    return "Hello Buddy! Welcome to https://cronyfastapi.herokuapp.com/"
 
-@app.get("/query/{userInput}")
-def cmdQuery(userInput : str):
-    userInput = userInput.lower()
-    vect = vectorizer.transform([userInput])
-    # print(max(vect.toarray()[0]))
-    if max(vect.toarray()[0]) >= 0.5:
-        outQuery = loadModel.predict(vectorizer.transform([userInput]))
-        # print(encoding.inverse_transform(outQuery))
-    
-        return {"userInput": userInput,
-        "Query" : encoding.inverse_transform(outQuery)[0], 
-        "conThresh" : round(max(vect.toarray()[0]), 2)}
+
+
+@app.get("/query/")
+def cmdQuery(userInput : str, modelType : str):
+    if modelType == "Admin":
+        loadModel = pickle.load(open("AdminXGBoostClassifier.pickle.dat", "rb"))
+        vectorizer = pickle.load(open("AdmintfidfVectorizer.pickle.dat", "rb"))
+        encoding = pickle.load(open("AdminEncodings.pickle.dat", "rb"))
+
+        userInput = userInput.lower()
+        vect = vectorizer.transform([userInput])
+        if max(vect.toarray()[0]) >= 0.5:
+            outQuery = loadModel.predict(vectorizer.transform([userInput]))
+            # print(encoding.inverse_transform(outQuery))
+            return {"userInput": userInput,
+                "Query" : encoding.inverse_transform(outQuery)[0], 
+                "conThresh" : round(max(vect.toarray()[0]), 2)}
+
+        else:
+
+            notFound = {
+                    "phraseInput" : userInput,
+                    "dateAdded" : datetime.datetime.utcnow()
+                    }
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(addDataToDB("not_found", notFound))
+            return "Sorry I didn't get you!"
+
     else:
-        
-        return {"Sorry I didn't get you!"}
+        return "Sorry, we donot have model trained for you"
+
+
 
 @app.get("/addActions/")
-# def addActions(actionName: str, actionType: str, dataAdded: int):
 def addActions(actionName: str, actionType: str):
     action = {
         "actionName" : actionName,
@@ -109,7 +122,8 @@ def addActions(actionName: str, actionType: str):
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    return loop.run_until_complete(addDataFromDB("action", action))
+    return loop.run_until_complete(addDataToDB("action", action))
+
 
 
 @app.get("/getNotFound")
@@ -117,6 +131,7 @@ def getNotFound():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     return loop.run_until_complete(getDataFromDB("not_found"))
+
 
 
 @app.get("/getActions")
