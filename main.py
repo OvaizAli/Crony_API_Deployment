@@ -41,7 +41,7 @@ app.add_middleware(
 )
 
 # def connDatabase(colName):
-def connDatabase():
+async def connDatabase():
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/test"
 
     client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
@@ -54,7 +54,7 @@ def connDatabase():
     try:
         data = await cursor.to_list(None)
         return [d for d in data]
-        
+
     except Exception:
         return "Unable to connect to the server."
     
