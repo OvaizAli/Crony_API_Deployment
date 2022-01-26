@@ -20,6 +20,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 # from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
 import pickle
+from bson import json_util
+import json
+import datetime
 
 # Loading all the models/vectorizer/encodings
 
@@ -40,24 +43,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# def connDatabase(colName):
-async def connDatabase():
-    CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/test"
+async def getDataFromDB(colName):
+    CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
     client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
 
-    db = client.CronyAI
-    col = db['action']
-    cursor = col.find()
+    database = client.CronyAI
+    collection = database.get_collection(colName)
+    cursor = collection.find()
     
-    # return col
     try:
         data = await cursor.to_list(None)
-        return [d for d in data]
+        return json.loads(json_util.dumps(data))
 
     except Exception:
         return "Unable to connect to the server."
-    
+
+
+async def addDataFromDB(colName, dataObj):  
+    CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+
+    client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
+    database = client.CronyAI
+    collection = database.get_collection("action")
+   
+    try:
+        result = await collection.insert_one(dataObj)
+
+        return "Success"
+
+    except Exception:
+        return "Unable to connect to the server."
+
 
 @app.get("/")
 def info():
@@ -79,10 +96,32 @@ def cmdQuery(userInput : str):
         
         return {"Sorry I didn't get you!"}
 
-@app.get("/notFound")
-def retNotFound():
-    # colObj = connDatabase("not_found")
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(connDatabase())
-    # return loop
-    # return colObj.find()
+@app.get("/addActions/")
+# def addActions(actionName: str, actionType: str, dataAdded: int):
+def addActions(actionName: str, actionType: str):
+    action = {
+        "actionName" : actionName,
+        "actionType" : actionType,
+        "dateAdded" : datetime.datetime.utcnow()
+    }
+
+    print(action)
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(addDataFromDB("action", action))
+
+
+@app.get("/getNotFound")
+def getNotFound():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(getDataFromDB("not_found"))
+
+
+@app.get("/getActions")
+def getActions():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(getDataFromDB("action"))
+
