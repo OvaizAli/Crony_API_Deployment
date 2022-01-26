@@ -46,12 +46,15 @@ def connDatabase():
 
     client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
 
-    # db = client.CronyAI
-    # col = db[colName]
+    db = client.CronyAI
+    col = db['action']
+    cursor = col.find()
     
     # return col
     try:
-        return client
+        data = await cursor.to_list(None)
+        return [d for d in data]
+        
     except Exception:
         return "Unable to connect to the server."
     
@@ -79,5 +82,7 @@ def cmdQuery(userInput : str):
 @app.get("/notFound")
 def retNotFound():
     # colObj = connDatabase("not_found")
-    return connDatabase()
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(connDatabase())
+    # return loop
     # return colObj.find()

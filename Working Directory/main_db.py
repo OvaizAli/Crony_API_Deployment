@@ -14,13 +14,15 @@ async def get_server_info():
 
     client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
     db = client.CronyAI
-    col = db['notFound']
-    data = col.find()
+    col = db['action']
+    cursor = col.find()
 
     try:
-        print(data)
+        data = await cursor.to_list(None)
+        return [d for d in data]
+
     except Exception:
-        print("Unable to connect to the server.")
+        return "Unable to connect to the server."
 
     # col = db[colName]
     # data = col.find()
@@ -34,5 +36,9 @@ if __name__ == "__main__":
     # Get the database
     # get_database("action")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_server_info())
+    print(loop.run_until_complete(get_server_info()))
+    
+
+    # for x in data:
+    #     print(x)
    
