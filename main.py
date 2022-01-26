@@ -3,8 +3,8 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pymongo import MongoClient
-import pymongo 
+import asyncio
+import motor.motor_asyncio
 # from nltk.stem import WordNetLemmatizer
 # nltk.download('wordnet')
 # from nltk.stem import LancasterStemmer
@@ -44,13 +44,17 @@ app.add_middleware(
 def connDatabase():
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/test"
 
-    client = MongoClient(CONNECTION_STRING)
+    client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
 
     # db = client.CronyAI
     # col = db[colName]
     
     # return col
-    return client
+    try:
+        return client
+    except Exception:
+        return "Unable to connect to the server."
+    
 
 @app.get("/")
 def info():

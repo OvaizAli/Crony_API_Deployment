@@ -7,5 +7,5 @@ uvloop
 httptools
 scipy
 scikit-learn
-pymongo
+motor
 dnspython
