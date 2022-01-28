@@ -5,19 +5,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import motor.motor_asyncio
-# from nltk.stem import WordNetLemmatizer
-# nltk.download('wordnet')
-# from nltk.stem import LancasterStemmer
-# from sklearn.feature_extraction.text import CountVectorizer
-# import pandas as pd
-# import nltk
-# nltk.download('punkt')
-# import re
-# from nltk.corpus import stopwords
-# nltk.download('stopwords')
+import pandas as pd
+from nltk.stem import WordNetLemmatizer
+from nltk.stem import LancasterStemmer
+from sklearn.feature_extraction.text import CountVectorizer
+import nltk
+import re
+from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
-# from sklearn import model_selection, preprocessing
-# from sklearn.metrics import accuracy_score
+from sklearn import model_selection, preprocessing
+from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
 import pickle
 from bson import json_util
@@ -86,6 +83,18 @@ async def delDataFromDB(colName, userInput):
     except Exception:
         return "Unable To Connect To The Server."
 
+def modelTrain(actionType):
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        df_data = pd.DataFrame(loop.run_until_complete(getDataFromDB('mapped_action')))
+        df_data = df_data[df_data['actionType'] == actionType][['phraseInput', 'actionName']]
+
+        print(df_data)
+
+    except:
+        return "Unable To Connect To The Server."
+
 ############################################################## API FUNCTIONS ###############################################################
 
 @app.get("/")
@@ -140,6 +149,26 @@ def addActions(actionName: str, actionType: str):
 
 
 
+# @app.get("/addMapAction/")
+# def addMapAction(phraseInput : str, actionName: str, actionType: str, ):
+#     mapAction = {
+#         "phraseInput" : phraseInput,
+#         "actionName" : actionName,
+#         "actionType" : actionType,
+#         "dateAdded" : datetime.datetime.utcnow()
+#     }
+
+#     loop = asyncio.new_event_loop()
+#     asyncio.set_event_loop(loop)
+#     try:
+#         loop.run_until_complete(addDataToDB("mapped_action", mapAction))
+#         return "Successfully Added into Mapped_Action"
+
+#     except:
+#         return "Unable To Connect To The Server."
+
+
+
 @app.get("/mapAction/")
 def mapAction(phraseInput : str, actionName: str, actionType: str, ):
     mapAction = {
@@ -173,4 +202,11 @@ def getActions():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     return loop.run_until_complete(getDataFromDB("action"))
+
+@app.get("/modelTrain")
+def getModelTrained():
+    return modelTrain("Admin")
+
+
+
 

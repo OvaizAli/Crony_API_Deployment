@@ -1,11 +1,16 @@
 fastapi
+pandas
 pickle-mixin
 xgboost
 uvicorn
 gunicorn
 uvloop
 httptools
-scipy
 scikit-learn
 motor
 dnspython
+re
+nltk
+nltk.download('wordnet')
+nltk.download('punkt')
+nltk.download('stopwords')
