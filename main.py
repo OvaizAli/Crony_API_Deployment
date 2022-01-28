@@ -52,7 +52,8 @@ async def getDataFromDB(colName):
         return json.loads(json_util.dumps(data))
 
     except Exception:
-        return "Unable to connect to the server."
+        return "Unable To Connect To The Server."
+
 
 
 async def addDataToDB(colName, dataObj):  
@@ -67,8 +68,23 @@ async def addDataToDB(colName, dataObj):
         return "Successfully Added Your Data"
 
     except Exception:
-        return "Unable to connect to the server."
+        return "Unable To Connect To The Server."
 
+
+
+async def delDataFromDB(colName, userInput):  
+    CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+
+    client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
+    database = client.CronyAI
+    collection = database.get_collection(colName)
+
+    try:
+        cursor = collection.delete_many({'phraseInput': {'$eq': userInput}})
+        return "Successfully Deleted Your Data"
+
+    except Exception:
+        return "Unable To Connect To The Server."
 
 ############################################################## API FUNCTIONS ###############################################################
 
@@ -89,12 +105,12 @@ def cmdQuery(userInput : str, modelType : str):
         vect = vectorizer.transform([userInput])
         if max(vect.toarray()[0]) >= 0.5:
             outQuery = loadModel.predict(vectorizer.transform([userInput]))
-            # print(encoding.inverse_transform(outQuery))
             return {"userInput": userInput,
                 "Query" : encoding.inverse_transform(outQuery)[0], 
                 "conThresh" : round(max(vect.toarray()[0]), 2)}
 
         else:
+            userInput = userInput.upper()
 
             notFound = {
                     "phraseInput" : userInput,
@@ -118,11 +134,29 @@ def addActions(actionName: str, actionType: str):
         "dateAdded" : datetime.datetime.utcnow()
     }
 
-    print(action)
-
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     return loop.run_until_complete(addDataToDB("action", action))
+
+
+
+@app.get("/mapAction/")
+def mapAction(phraseInput : str, actionName: str, actionType: str, ):
+    mapAction = {
+        "phraseInput" : phraseInput,
+        "actionName" : actionName,
+        "actionType" : actionType,
+        "dateAdded" : datetime.datetime.utcnow()
+    }
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    if loop.run_until_complete(delDataFromDB("not_found", phraseInput)) == "Successfully Deleted Your Data":
+        try:
+            loop.run_until_complete(addDataToDB("mapped_action", mapAction))
+            return "Successfully Mapped Your Action"
+        except:
+            return "Unable To Connect To The Server."
 
 
 
