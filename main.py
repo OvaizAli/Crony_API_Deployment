@@ -6,11 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import motor.motor_asyncio
 import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+import re
+import nltk
+nltk.download('wordnet')
+nltk.download('punkt')
+nltk.download('stopwords')
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import LancasterStemmer
-from sklearn.feature_extraction.text import CountVectorizer
-import nltk
-import re
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import model_selection, preprocessing
