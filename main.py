@@ -7,10 +7,10 @@ import asyncio
 import motor.motor_asyncio
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
-import re
 import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import LancasterStemmer
+import re
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import model_selection, preprocessing
@@ -49,7 +49,7 @@ async def getDataFromDB(colName):
         return json.loads(json_util.dumps(data))
 
     except Exception:
-        return "Unable To Connect To The Server."
+        return "Unable To Connect To The Server"
 
 
 
@@ -65,7 +65,7 @@ async def addDataToDB(colName, dataObj):
         return "Successfully Added Your Data"
 
     except Exception:
-        return "Unable To Connect To The Server."
+        return "Unable To Connect To The Server"
 
 
 
@@ -81,7 +81,7 @@ async def delDataFromDB(colName, userInput):
         return "Successfully Deleted Your Data"
 
     except Exception:
-        return "Unable To Connect To The Server."
+        return "Unable To Connect To The Server"
 
 def modelTrain(actionType):
     try:
@@ -90,10 +90,47 @@ def modelTrain(actionType):
         df_data = pd.DataFrame(loop.run_until_complete(getDataFromDB('mapped_action')))
         df_data = df_data[df_data['actionType'] == actionType][['phraseInput', 'actionName']]
 
-        print(df_data)
+        data = df_data['phraseInput'].copy()
+
+        stop_words = stopwords.words('english')
+
+        lemmatizer = WordNetLemmatizer()
+        index = 0
+        for row in data:
+            filtered_sentence = []
+            row = row.lower()
+            sentence = re.sub(r'[^\w\s]', '', row)
+            words = nltk.word_tokenize(sentence)
+            words = [w for w in words if not w in stop_words]
+            for word in words:
+                # print(word)
+                filtered_sentence.append(lemmatizer.lemmatize(word))
+            data.iloc[index] = ','.join(filtered_sentence).replace(",", " ")
+            index += 1
+
+        df_data['phraseInput'] = data
+
+        vectorizer = TfidfVectorizer()
+        vectors = vectorizer.fit_transform(df_data['phraseInput'])
+
+        pickle.dump(vectorizer, open(actionType + "tfidfVectorizer.pickle.dat", "wb"))
+
+        train_x, valid_x, train_y, valid_y = model_selection.train_test_split(vectors, df_data['actionName'], random_state = 42, test_size = 0.20, stratify = df_data['actionName'])
+        encoder = preprocessing.LabelEncoder()
+        train_y = encoder.fit_transform(train_y)
+        valid_y = encoder.transform(valid_y)
+        
+        pickle.dump(encoder, open(actionType + "Encodings.pickle.dat", "wb"))
+
+        xgb = XGBClassifier(use_label_encoder=False,learning_rate=0.4,max_depth=7)
+        xgb.fit(train_x, train_y)
+
+        pickle.dump(xgb, open(actionType + "XGBoostClassifier.pickle.dat", "wb"))
+        
+        return "Successfully Trained The Model"
 
     except:
-        return "Unable To Connect To The Server."
+        return "Unable To Connect To The Server"
 
 ############################################################## API FUNCTIONS ###############################################################
 
@@ -165,12 +202,12 @@ def addActions(actionName: str, actionType: str):
 #         return "Successfully Added into Mapped_Action"
 
 #     except:
-#         return "Unable To Connect To The Server."
+#         return "Unable To Connect To The Server"
 
 
 
 @app.get("/mapAction/")
-def mapAction(phraseInput : str, actionName: str, actionType: str, ):
+def mapAction(phraseInput : str, actionName: str, actionType: str):
     mapAction = {
         "phraseInput" : phraseInput,
         "actionName" : actionName,
@@ -185,7 +222,7 @@ def mapAction(phraseInput : str, actionName: str, actionType: str, ):
             loop.run_until_complete(addDataToDB("mapped_action", mapAction))
             return "Successfully Mapped Your Action"
         except:
-            return "Unable To Connect To The Server."
+            return "Unable To Connect To The Server"
 
 
 
@@ -204,8 +241,8 @@ def getActions():
     return loop.run_until_complete(getDataFromDB("action"))
 
 @app.get("/modelTrain")
-def getModelTrained():
-    return modelTrain("Admin")
+def getModelTrained(actionType: str):
+    return modelTrain(actionType)
 
 
 
