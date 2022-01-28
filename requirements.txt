@@ -9,5 +9,4 @@ httptools
 scikit-learn
 motor
 dnspython
-re
 nltk
