@@ -128,10 +128,10 @@ def modelTrain(actionType):
 
         data = df_data['phraseInput'].copy()
 
-        print(data)
-
         stop_words = stopwords.words('english')
 
+        print(data)
+        
         lemmatizer = WordNetLemmatizer()
         index = 0
         for row in data:
@@ -182,7 +182,7 @@ def modelTrain(actionType):
         asyncio.set_event_loop(loop)
         
         print("Here")
-        
+
         if loop.run_until_complete(delPickleFiles(actionType)) == "Successfully Deleted Your Files":
             loop.run_until_complete(addDataToDB("pickle_files", pickle_files))
             return "Successfully Trained and Updated The Model"
