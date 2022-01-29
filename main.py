@@ -134,14 +134,15 @@ def modelTrain(actionType):
         lemmatizer = WordNetLemmatizer()
         index = 0
         for row in data:
-            print(row)
             filtered_sentence = []
             row = row.lower()
             sentence = re.sub(r'[^\w\s]', '', row)
+            print(sentence)
             words = nltk.word_tokenize(sentence)
             words = [w for w in words if not w in stop_words]
+            print(words)
             for word in words:
-                # print(word)
+                print(word)
                 filtered_sentence.append(lemmatizer.lemmatize(word))
             data.iloc[index] = ','.join(filtered_sentence).replace(",", " ")
             index += 1
