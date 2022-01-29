@@ -131,7 +131,7 @@ def modelTrain(actionType):
 
         stop_words = stopwords.words('english')
 
-        print(data)
+        print(stop_words)
 
         lemmatizer = WordNetLemmatizer()
         index = 0
@@ -155,6 +155,8 @@ def modelTrain(actionType):
         # pickle.dump(vectorizer, open(actionType + "tfidfVectorizer.pickle.dat", "wb"))
         pickled_vectorizer = pickle.dumps(vectorizer)
 
+        print("Vectorizer")
+
         train_x, valid_x, train_y, valid_y = model_selection.train_test_split(vectors, df_data['actionName'], random_state = 42, test_size = 0.20, stratify = df_data['actionName'])
         encoder = preprocessing.LabelEncoder()
         train_y = encoder.fit_transform(train_y)
@@ -163,11 +165,15 @@ def modelTrain(actionType):
         # pickled_encoder = pickle.dumps(encoder, open(actionType + "Encodings.pickle.dat", "wb"))
         pickled_encoder = pickle.dumps(encoder)
 
+        print("Encoder")
+
         xgb = XGBClassifier(use_label_encoder=False,learning_rate=0.4,max_depth=7)
         xgb.fit(train_x, train_y)
 
         # pickle.dump(xgb, open(actionType + "XGBoostClassifier.pickle.dat", "wb"))
         pickled_model = pickle.dumps(xgb)
+
+        print("Model")
 
         pickle_files = {
             "model" : pickled_model,
