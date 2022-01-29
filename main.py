@@ -52,6 +52,7 @@ async def getDataFromDB(colName):
         return "Unable To Connect To The Server"
 
 
+
 async def getPickleFilesFromDB(modelType, file):
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
@@ -67,6 +68,7 @@ async def getPickleFilesFromDB(modelType, file):
 
     except Exception:
         return "Unable To Connect To The Server"
+
 
 
 async def addDataToDB(colName, dataObj):  
@@ -100,6 +102,7 @@ async def delDataFromDB(colName, userInput):
         return "Unable To Connect To The Server"
 
 
+
 async def delPickleFiles(modelType):  
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
@@ -109,7 +112,7 @@ async def delPickleFiles(modelType):
 
     try:
        cursor = collection.delete_many({'modelType': {'$eq': modelType}})
-       return "Successfully Deleted Your Data"
+       return "Successfully Deleted Your Files"
 
     except Exception:
         return "Unable To Connect To The Server"
@@ -173,10 +176,12 @@ def modelTrain(actionType):
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(addDataToDB("pickle_files", pickle_files))
-        if loop.run_until_complete(delPickleFiles(actionType)) == "Successfully Deleted Your Data":
+        
+        if loop.run_until_complete(delPickleFiles(actionType)) == "Successfully Deleted Your Files":
+            loop.run_until_complete(addDataToDB("pickle_files", pickle_files))
             return "Successfully Trained and Updated The Model"
         else:
+            loop.run_until_complete(addDataToDB("pickle_files", pickle_files))
             return "Successfully Trained The Model"
 
     except:
@@ -291,6 +296,8 @@ def getActions():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     return loop.run_until_complete(getDataFromDB("action"))
+
+
 
 @app.get("/modelTrain")
 def getModelTrained(actionType: str):
