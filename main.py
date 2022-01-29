@@ -197,8 +197,10 @@ def modelTrain(actionType):
             loop.run_until_complete(addDataToDB("pickle_files", pickle_files))
             return "Successfully Trained The Model"
 
-    except:
-        return "Unable To Connect To The Server"
+    except Exception as e: 
+        return e
+    # except:
+    #     return "Unable To Connect To The Server"
 
 ############################################################## API FUNCTIONS ###############################################################
 
