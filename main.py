@@ -52,6 +52,22 @@ async def getDataFromDB(colName):
         return "Unable To Connect To The Server"
 
 
+async def getPickleFilesFromDB(modelType, file):
+    CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+
+    client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
+
+    database = client.CronyAI
+    collection = database.get_collection("pickle_files")
+    # cursor = collection..find_one({'modelType': {'$eq': modelType}})
+    
+    try:
+        data = await collection.find_one({'modelType': {'$eq': modelType}})
+        return data[file]
+
+    except Exception:
+        return "Unable To Connect To The Server"
+
 
 async def addDataToDB(colName, dataObj):  
     CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
@@ -83,6 +99,23 @@ async def delDataFromDB(colName, userInput):
     except Exception:
         return "Unable To Connect To The Server"
 
+
+async def delPickleFiles(modelType):  
+    CONNECTION_STRING = "mongodb+srv://OvaizAli:123@cronyai.idwl9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+
+    client = motor.motor_asyncio.AsyncIOMotorClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
+    database = client.CronyAI
+    collection = database.get_collection("pickle_files")
+
+    try:
+       cursor = collection.delete_many({'modelType': {'$eq': modelType}})
+       return "Successfully Deleted Your Data"
+
+    except Exception:
+        return "Unable To Connect To The Server"
+
+
+
 def modelTrain(actionType):
     try:
         loop = asyncio.new_event_loop()
@@ -113,21 +146,38 @@ def modelTrain(actionType):
         vectorizer = TfidfVectorizer()
         vectors = vectorizer.fit_transform(df_data['phraseInput'])
 
-        pickle.dump(vectorizer, open(actionType + "tfidfVectorizer.pickle.dat", "wb"))
+        # pickle.dump(vectorizer, open(actionType + "tfidfVectorizer.pickle.dat", "wb"))
+        pickled_vectorizer = pickle.dumps(vectorizer)
 
         train_x, valid_x, train_y, valid_y = model_selection.train_test_split(vectors, df_data['actionName'], random_state = 42, test_size = 0.20, stratify = df_data['actionName'])
         encoder = preprocessing.LabelEncoder()
         train_y = encoder.fit_transform(train_y)
         valid_y = encoder.transform(valid_y)
         
-        pickle.dump(encoder, open(actionType + "Encodings.pickle.dat", "wb"))
+        # pickled_encoder = pickle.dumps(encoder, open(actionType + "Encodings.pickle.dat", "wb"))
+        pickled_encoder = pickle.dumps(encoder)
 
         xgb = XGBClassifier(use_label_encoder=False,learning_rate=0.4,max_depth=7)
         xgb.fit(train_x, train_y)
 
-        pickle.dump(xgb, open(actionType + "XGBoostClassifier.pickle.dat", "wb"))
-        
-        return "Successfully Trained The Model"
+        # pickle.dump(xgb, open(actionType + "XGBoostClassifier.pickle.dat", "wb"))
+        pickled_model = pickle.dumps(xgb)
+
+        pickle_files = {
+            "model" : pickled_model,
+            "vectorizer" : pickled_vectorizer,
+            "encodings" : pickled_encoder,
+            "modelType" : actionType,
+            "dateAdded" : datetime.datetime.utcnow()
+        }
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(addDataToDB("pickle_files", pickle_files))
+        if loop.run_until_complete(delPickleFiles(actionType)) == "Successfully Deleted Your Data":
+            return "Successfully Trained and Updated The Model"
+        else:
+            return "Successfully Trained The Model"
 
     except:
         return "Unable To Connect To The Server"
@@ -142,11 +192,13 @@ def info():
 
 @app.get("/query/")
 def cmdQuery(userInput : str, modelType : str):
-    if modelType == "Admin":
-        loadModel = pickle.load(open("AdminXGBoostClassifier.pickle.dat", "rb"))
-        vectorizer = pickle.load(open("AdmintfidfVectorizer.pickle.dat", "rb"))
-        encoding = pickle.load(open("AdminEncodings.pickle.dat", "rb"))
-
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loadModel = pickle.loads(loop.run_until_complete(getPickleFilesFromDB(modelType, "model")))
+        vectorizer = pickle.loads(loop.run_until_complete(getPickleFilesFromDB(modelType, "vectorizer")))
+        encoding = pickle.loads(loop.run_until_complete(getPickleFilesFromDB(modelType, "encodings")))
+          
         userInput = userInput.lower()
         vect = vectorizer.transform([userInput])
         if max(vect.toarray()[0]) >= 0.5:
@@ -167,8 +219,8 @@ def cmdQuery(userInput : str, modelType : str):
             loop.run_until_complete(addDataToDB("not_found", notFound))
             return "Sorry I didn't get you!"
 
-    else:
-        return "Sorry, we donot have model trained for you"
+    except:
+        return "Sorry, We donot have Model Trained For This Model Type"
 
 
 
