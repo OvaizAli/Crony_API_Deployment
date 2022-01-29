@@ -132,9 +132,9 @@ def modelTrain(actionType):
         stop_words = stopwords.words('english')
 
         lemmatizer = WordNetLemmatizer()
-        print(lemmatizer)
         index = 0
         for row in data:
+            print(row)
             filtered_sentence = []
             row = row.lower()
             sentence = re.sub(r'[^\w\s]', '', row)
@@ -145,7 +145,8 @@ def modelTrain(actionType):
                 filtered_sentence.append(lemmatizer.lemmatize(word))
             data.iloc[index] = ','.join(filtered_sentence).replace(",", " ")
             index += 1
-
+        
+        print(data)
         df_data['phraseInput'] = data
 
         vectorizer = TfidfVectorizer()
