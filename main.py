@@ -12,6 +12,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import LancasterStemmer
 import re
 from nltk.corpus import stopwords
+from nltk.corpus import wordnet
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import model_selection, preprocessing
 from sklearn.metrics import accuracy_score
@@ -131,7 +132,7 @@ def modelTrain(actionType):
         stop_words = stopwords.words('english')
 
         print(data)
-        
+
         lemmatizer = WordNetLemmatizer()
         index = 0
         for row in data:
