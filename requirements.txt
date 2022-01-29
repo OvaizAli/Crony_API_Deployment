@@ -10,3 +10,4 @@ scikit-learn
 motor
 dnspython
 nltk
+nltk.data
