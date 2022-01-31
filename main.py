@@ -239,10 +239,10 @@ def cmdQuery(userInput : str, modelType : str):
             return {"userInput": userInput,
                 "Query" : "Sorry I didn't get you!", 
                 "conThresh" : 0}
-            
-
     except:
-        return "Sorry, We donot have Model Trained For This Model Type"
+        return {"userInput": userInput,
+                "Query" : "Sorry, We donot have Model Trained For This Model Type", 
+                "conThresh" : -1}
 
 
 
