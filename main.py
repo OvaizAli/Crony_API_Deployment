@@ -96,7 +96,10 @@ async def delDataFromDB(colName, userInput):
     collection = database.get_collection(colName)
 
     try:
-        cursor = collection.delete_many({'phraseInput': {'$eq': userInput}})
+        if(colName == 'action'):
+            cursor = collection.delete_many({'actionName': {'$eq': userInput}})
+        else:
+            cursor = collection.delete_many({'phraseInput': {'$eq': userInput}})
         return "Successfully Deleted Your Data"
 
     except Exception:
@@ -315,6 +318,20 @@ def getActions():
     return loop.run_until_complete(getDataFromDB("action"))
 
 
+
+@app.get("/delNotFound")
+def delNotFound(phraseInput : str):
+    phraseInput = phraseInput.upper()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(delDataFromDB("not_found", phraseInput))
+
+@app.get("/delAction")
+def delAction(actionName : str):
+    actionName = actionName.upper()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(delDataFromDB("action", actionName))
 
 # @app.get("/modelTrain")
 # def getModelTrained(actionType: str):
