@@ -143,7 +143,7 @@ def modelTrain(actionType):
                 filtered_sentence.append(lemmatizer.lemmatize(word))
             data.iloc[index] = ','.join(filtered_sentence).replace(",", " ")
             index += 1
-            
+
         print(filtered_sentence)
         print(data)
         df_data['phraseInput'] = data
@@ -236,7 +236,10 @@ def cmdQuery(userInput : str, modelType : str):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(addDataToDB("not_found", notFound))
-            return "Sorry I didn't get you!"
+            return {"userInput": userInput,
+                "Query" : "Sorry I didn't get you!", 
+                "conThresh" : 0}
+            
 
     except:
         return "Sorry, We donot have Model Trained For This Model Type"
@@ -313,9 +316,9 @@ def getActions():
 
 
 
-@app.get("/modelTrain")
-def getModelTrained(actionType: str):
-    return modelTrain(actionType)
+# @app.get("/modelTrain")
+# def getModelTrained(actionType: str):
+#     return modelTrain(actionType)
 
 
 
