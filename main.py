@@ -252,7 +252,7 @@ def cmdQuery(userInput : str, modelType : str):
 @app.get("/addActions/")
 def addActions(actionName: str, actionType: str):
     action = {
-        "actionName" : actionName,
+        "actionName" : actionName.upper(),
         "actionType" : actionType,
         "dateAdded" : datetime.datetime.utcnow()
     }
